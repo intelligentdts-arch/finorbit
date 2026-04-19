@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
@@ -10,22 +10,21 @@ interface SidebarProps {
 
 const navItems = [
   { icon: '⬡', label: 'Dashboard', path: '/dashboard' },
-  { icon: '⚙️', label: 'Control Room', path: '/dashboard/control' },
-  { icon: '✦', label: 'Opportunities', path: '/dashboard/opportunities', badge: '3' },
-  { icon: '📊', label: 'Investments', path: '/dashboard/investments' },
-  { icon: '💳', label: 'Borrowing', path: '/dashboard/borrowing' },
-  { icon: '🛡️', label: 'Risk Shield', path: '/dashboard/risk' },
+  { icon: '⚙', label: 'Control Room', path: '/dashboard/control' },
+  { icon: '*', label: 'Opportunities', path: '/dashboard/opportunities', badge: '3' },
+  { icon: '#', label: 'Investments', path: '/dashboard/investments' },
+  { icon: '$', label: 'Borrowing', path: '/dashboard/borrowing' },
+  { icon: '!', label: 'Risk Shield', path: '/dashboard/risk' },
 ]
 
 const settingsItems = [
-  { icon: '⚡', label: 'Autopilot Rules', path: '/dashboard/autopilot' },
-  { icon: '🔔', label: 'Notifications', path: '/dashboard/notifications' },
-  { icon: '⚙️', label: 'Settings & Billing', path: '/dashboard/settings' },
+  { icon: '~', label: 'Autopilot Rules', path: '/dashboard/autopilot' },
+  { icon: '@', label: 'Notifications', path: '/dashboard/notifications' },
+  { icon: '⚙', label: 'Settings & Billing', path: '/dashboard/settings' },
 ]
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
-
   return (
     <>
       {isOpen && (
@@ -39,7 +38,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           style={{ background: 'linear-gradient(135deg,#e0f2fe,#38bdf8,#2dd4bf)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           FinOrbit
         </div>
-
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map(item => {
             const active = pathname === item.path
@@ -62,9 +60,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             )
           })}
-
           <div className="my-3 mx-2" style={{ borderTop: '1px solid rgba(56,189,248,0.08)' }} />
-
           {settingsItems.map(item => {
             const active = pathname === item.path
             return (
