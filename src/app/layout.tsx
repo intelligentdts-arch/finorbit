@@ -1,34 +1,19 @@
 import type { Metadata } from 'next'
-import { Syne, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
-
-const syne = Syne({
-  subsets: ['latin'],
-  variable: '--font-syne',
-  weight: ['400', '600', '700', '800'],
-  display: 'swap',
-})
-
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  variable: '--font-dm-mono',
-  weight: ['300', '400', '500'],
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'FinOrbit — Autonomous Financial Operating System',
   description: 'Your money on autopilot. AI that manages every dollar — automatically.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmMono.variable}`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+      </head>
       <body>
         <ToastProvider>
           {children}

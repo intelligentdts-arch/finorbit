@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: #040c1a;
+  color: #eef2fc;
+  font-family: 'Syne', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea, select { font-family: inherit; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.15); border-radius: 2px; }
+
+.grad-text {
+  background: linear-gradient(135deg,#e0f2fe 0%,#38bdf8 55%,#2dd4bf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes ring-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes pulse-brand {
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,211,238,.5)}
+  50%{opacity:.6;box-shadow:0 0 0 5px rgba(34,211,238,0)}
+}
+@keyframes shimmer {
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+@keyframes toastIn {
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:translateX(0)}
+}
+@keyframes typing-bounce {
+  0%,80%,100%{transform:translateY(0)}
+  40%{transform:translateY(-6px)}
+}
