@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useFinancialStore } from '@/store/financialStore'
@@ -22,22 +22,22 @@ export default function ControlRoomPage() {
     { id: 'borrowing', label: 'Borrowing' },
   ]
 
-  const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar ▶']
+  const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar â–¶']
   const incomeHeights = [112, 108, 128, 116, 120, 140]
   const expenseHeights = [88, 92, 104, 86, 90, 94]
 
   const assets = [
-    { icon: '📈', name: 'US Equities', value: 48200, change: '+11.4% YTD', up: true },
-    { icon: '🌍', name: 'Intl Equities', value: 12400, change: '+6.2% YTD', up: true },
-    { icon: '🏠', name: 'Real Estate (REITs)', value: 8900, change: '+4.8% YTD', up: true },
-    { icon: '🔒', name: 'Bonds / Fixed', value: 18600, change: '+1.9% YTD', up: true },
-    { icon: '⚡', name: 'Crypto', value: 3200, change: '+34% YTD', up: true },
-    { icon: '💵', name: 'Cash / HYSA', value: 14800, change: '5.1% APY', up: true },
+    { icon: 'ðŸ“ˆ', name: 'US Equities', value: 48200, change: '+11.4% YTD', up: true },
+    { icon: 'ðŸŒ', name: 'Intl Equities', value: 12400, change: '+6.2% YTD', up: true },
+    { icon: 'ðŸ ', name: 'Real Estate (REITs)', value: 8900, change: '+4.8% YTD', up: true },
+    { icon: 'ðŸ”’', name: 'Bonds / Fixed', value: 18600, change: '+1.9% YTD', up: true },
+    { icon: 'âš¡', name: 'Crypto', value: 3200, change: '+34% YTD', up: true },
+    { icon: 'ðŸ’µ', name: 'Cash / HYSA', value: 14800, change: '5.1% APY', up: true },
   ]
 
   const debts = [
     { name: 'Mortgage', rate: '6.2% APR', remaining: 312000, original: 400000, tag: 'Optimal', tagColor: '#34d399' },
-    { name: 'Auto Loan', rate: '5.4% APR · refinance available', remaining: 18400, original: 24000, tag: 'Refinance →', tagColor: '#22d3ee' },
+    { name: 'Auto Loan', rate: '5.4% APR Â· refinance available', remaining: 18400, original: 24000, tag: 'Refinance â†’', tagColor: '#22d3ee' },
     { name: 'Student Loan', rate: '4.1% APR', remaining: 22100, original: 48000, tag: 'Optimal', tagColor: '#34d399' },
   ]
 
@@ -109,7 +109,7 @@ export default function ControlRoomPage() {
                         title: 'Review upcoming large expenses',
                         desc: 'AI is building reserve automatically' },
                       { label: 'Q2 PROJECTION', color: '#22d3ee', bg: 'rgba(34,211,238,0.06)', border: 'rgba(56,189,248,0.1)',
-                        title: data?.connected ? `Net worth → ${fmt((data.net_worth || 0) * 1.047)}` : 'Connect bank for projection',
+                        title: data?.connected ? `Net worth â†’ ${fmt((data.net_worth || 0) * 1.047)}` : 'Connect bank for projection',
                         desc: 'Based on current trajectory +4.7%' },
                     ].map(item => (
                       <div key={item.label} className="p-4 rounded-xl"
@@ -128,10 +128,10 @@ export default function ControlRoomPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="rounded-2xl p-6" style={{ background: '#112240', border: '1px solid rgba(56,189,248,0.1)' }}>
                     <div className="text-xs font-mono uppercase tracking-widest mb-5" style={{ color: '#94a8c8' }}>
-                      Real Spending — From Your Accounts
+                      Real Spending â€” From Your Accounts
                     </div>
                     <div className="space-y-4">
-                      {data.top_categories.map((cat, i) => {
+                      {data.top_categories.map((cat: { name: string; amount: number }, i: number) => {
                         const max = data.top_categories[0].amount
                         const colors = ['#38bdf8', '#2dd4bf', '#fbbf24', '#818cf8', '#f87171', '#34d399']
                         return (
@@ -156,9 +156,9 @@ export default function ControlRoomPage() {
                     </div>
                     <div className="space-y-3">
                       {data.accounts
-                        .filter(acc => acc.type === 'depository')
+                        .filter((acc: { account_id: string; name: string; type: string; institution_name: string; balances: { current: number } }) => acc.type === 'depository')
                         .slice(0, 3)
-                        .map(acc => (
+                        .map((acc: { account_id: string; name: string; type: string; institution_name: string; balances: { current: number } }) => (
                           <div key={acc.account_id} className="flex items-center justify-between p-3 rounded-lg"
                             style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.06)' }}>
                             <div>
@@ -192,7 +192,7 @@ export default function ControlRoomPage() {
                       {fmt(asset.value)}
                     </div>
                     <div className="text-xs font-mono" style={{ color: asset.up ? '#34d399' : '#f87171' }}>
-                      {asset.up ? '↑' : '↓'} {asset.change}
+                      {asset.up ? 'â†‘' : 'â†“'} {asset.change}
                     </div>
                   </div>
                 ))}
@@ -205,9 +205,9 @@ export default function ControlRoomPage() {
                   </div>
                   <div className="space-y-3">
                     {[
-                      { icon: '🔄', bg: 'rgba(56,189,248,0.06)', title: 'Rebalancing scheduled', desc: 'Equities overweight by 3% → auto-rebalance next week' },
-                      { icon: '📉', bg: 'rgba(52,211,153,0.06)', title: 'Tax-loss harvesting opportunity detected', desc: 'Could save estimated $200–400 this tax year', titleColor: '#34d399' },
-                      { icon: '💰', bg: 'rgba(34,211,238,0.05)', title: 'DCA automation active', desc: 'Monthly auto-investment into index funds running' },
+                      { icon: 'ðŸ”„', bg: 'rgba(56,189,248,0.06)', title: 'Rebalancing scheduled', desc: 'Equities overweight by 3% â†’ auto-rebalance next week' },
+                      { icon: 'ðŸ“‰', bg: 'rgba(52,211,153,0.06)', title: 'Tax-loss harvesting opportunity detected', desc: 'Could save estimated $200â€“400 this tax year', titleColor: '#34d399' },
+                      { icon: 'ðŸ’°', bg: 'rgba(34,211,238,0.05)', title: 'DCA automation active', desc: 'Monthly auto-investment into index funds running' },
                     ].map((action, i) => (
                       <div key={i} className="flex gap-3 p-3 rounded-lg"
                         style={{ background: action.bg, border: '1px solid rgba(56,189,248,0.06)' }}>
@@ -261,13 +261,13 @@ export default function ControlRoomPage() {
                   <div className="p-4 rounded-xl mb-4"
                     style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(56,189,248,0.1)' }}>
                     <div className="text-xs font-mono mb-2" style={{ color: '#22d3ee' }}>ACTIVE OPPORTUNITY</div>
-                    <div className="text-base font-bold mb-2">Refinance auto loan — potential savings available</div>
+                    <div className="text-base font-bold mb-2">Refinance auto loan â€” potential savings available</div>
                     <div className="text-sm mb-3" style={{ color: '#94a8c8' }}>
                       Based on current rates and your credit profile, refinancing your auto loan could meaningfully reduce your monthly payment and total interest paid.
                     </div>
                     <button className="px-4 py-2 rounded-lg text-sm font-extrabold uppercase tracking-wider"
                       style={{ background: 'linear-gradient(135deg,#38bdf8,#2dd4bf)', color: '#020d1a', border: 'none', cursor: 'pointer' }}>
-                      Explore Refinancing →
+                      Explore Refinancing â†’
                     </button>
                   </div>
                   <div className="text-xs font-mono" style={{ color: '#526480' }}>
@@ -287,7 +287,7 @@ export default function ControlRoomPage() {
                   {[
                     { label: 'Available credit', value: '$21,400' },
                     { label: 'Used credit', value: '$2,900' },
-                    { label: 'Credit score range', value: '740–760' },
+                    { label: 'Credit score range', value: '740â€“760' },
                   ].map(row => (
                     <div key={row.label} className="flex justify-between text-sm py-1">
                       <span style={{ color: '#94a8c8' }}>{row.label}</span>
@@ -340,3 +340,5 @@ export default function ControlRoomPage() {
     </div>
   )
 }
+
+
