@@ -1,10 +1,13 @@
-/**
+﻿/**
  * All financial calculations live here.
  * Cent-accurate, validated, and fully tested.
  * Never do raw arithmetic in components or routes.
  */
 
-export const roundMoney = (n: number): number => Math.round(n * 100) / 100
+export const roundMoney = (n: number): number => {
+  const sign = n < 0 ? -1 : 1
+  return sign * Math.round((Math.abs(n) + Number.EPSILON) * 100) / 100
+}
 
 export const formatCurrency = (
   amount: number,
@@ -22,7 +25,7 @@ export const formatCurrency = (
   }).format(amount)
 }
 
-// Net worth = assets − liabilities
+// Net worth = assets âˆ’ liabilities
 export const calculateNetWorth = (
   accounts: Array<{ type: string; balances: { current: number | null } }>
 ): number =>
@@ -158,3 +161,5 @@ export const calculateAutopilotScore = (params: {
   const overall = Math.round((stability + growth + risk) / 3)
   return { overall, stability, growth, risk }
 }
+
+

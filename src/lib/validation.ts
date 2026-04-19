@@ -71,8 +71,10 @@ export function formatZodError(error: z.ZodError): string {
 // Strip HTML and script injection from strings
 export function sanitize(input: string): string {
   return input
-    .replace(/<[^>]*>/g, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '')
+    .replace(/<script[^>]*>.*?<\/script>/gis, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/javascript:/gi, "")
+    .replace(/on\w+\s*=/gi, "")
     .trim()
 }
+
