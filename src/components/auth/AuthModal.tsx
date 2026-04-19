@@ -6,42 +6,72 @@ import { useAuthStore } from '@/store/authStore'
 import { signUpSchema, signInSchema, formatZodError, sanitize } from '@/lib/validation'
 
 interface AuthModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen:      boolean
+  onClose:     () => void
   defaultTab?: 'signin' | 'signup'
 }
 
+const S = {
+  panel:  '#112240',
+  deep:   '#081528',
+  b1:     'rgba(56,189,248,0.15)',
+  b2:     'rgba(56,189,248,0.10)',
+  b3:     'rgba(56,189,248,0.06)',
+  brand:  '#22d3ee',
+  teal:   '#2dd4bf',
+  text:   '#eef2fc',
+  muted:  '#94a8c8',
+  dim:    '#526480',
+  green:  '#34d399',
+  red:    '#f87171',
+  grad:   'linear-gradient(135deg,#38bdf8,#2dd4bf)',
+}
+
 export default function AuthModal({ isOpen, onClose, defaultTab = 'signup' }: AuthModalProps) {
-  const [tab, setTab] = useState<'signin' | 'signup'>(defaultTab)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [tab,          setTab]          = useState<'signin' | 'signup'>(defaultTab)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState('')
+  const [success,      setSuccess]      = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [siEmail, setSiEmail] = useState('')
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'pro'>('pro')
+
+  // Sign-in fields
+  const [siEmail,    setSiEmail]    = useState('')
   const [siPassword, setSiPassword] = useState('')
-  const [suFirst, setSuFirst] = useState('')
-  const [suLast, setSuLast] = useState('')
-  const [suEmail, setSuEmail] = useState('')
+
+  // Sign-up fields
+  const [suFirst,    setSuFirst]    = useState('')
+  const [suLast,     setSuLast]     = useState('')
+  const [suEmail,    setSuEmail]    = useState('')
   const [suPassword, setSuPassword] = useState('')
-  const [selectedPlan, setSelectedPlan] = useState('pro')
+
   const { refreshUser } = useAuthStore()
 
   if (!isOpen) return null
+
+  const switchTab = (t: 'signin' | 'signup') => {
+    setTab(t)
+    setError('')
+    setSuccess('')
+  }
 
   const handleSignIn = async () => {
     setError('')
     const result = signInSchema.safeParse({ email: siEmail, password: siPassword })
     if (!result.success) { setError(formatZodError(result.error)); return }
+
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: result.data.email,
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email:    result.data.email,
       password: result.data.password,
     })
-    if (error) {
+
+    if (authError) {
       setError('Incorrect email or password. Please try again.')
       setLoading(false)
       return
     }
+
     await refreshUser()
     setLoading(false)
     onClose()
@@ -51,193 +81,277 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'signup' }: Au
     setError('')
     const result = signUpSchema.safeParse({
       firstName: suFirst,
-      lastName: suLast,
-      email: suEmail,
-      password: suPassword,
-      plan: selectedPlan,
+      lastName:  suLast,
+      email:     suEmail,
+      password:  suPassword,
+      plan:      selectedPlan,
     })
     if (!result.success) { setError(formatZodError(result.error)); return }
+
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email: result.data.email,
+    const { error: authError } = await supabase.auth.signUp({
+      email:    result.data.email,
       password: result.data.password,
       options: {
         data: {
           first_name: sanitize(result.data.firstName),
-          last_name: sanitize(result.data.lastName ?? ''),
-          plan: result.data.plan,
+          last_name:  sanitize(result.data.lastName ?? ''),
+          plan:       result.data.plan,
         },
       },
     })
-    if (error) {
+
+    if (authError) {
       setError(
-        error.message.includes('already registered')
+        authError.message.includes('already registered')
           ? 'An account with this email already exists. Try signing in instead.'
-          : error.message
+          : authError.message,
       )
       setLoading(false)
       return
     }
+
     setSuccess('Account created! Check your email to verify, then sign in.')
     setLoading(false)
   }
 
-  const handleGoogleSignIn = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    })
+  const inputStyle: React.CSSProperties = {
+    width:        '100%',
+    background:   S.deep,
+    border:       `1px solid ${S.b1}`,
+    borderRadius: 8,
+    padding:      '13px 15px',
+    color:        S.text,
+    fontSize:     '0.88rem',
+    outline:      'none',
+    marginBottom: 14,
+    fontFamily:   'inherit',
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
-      style={{ background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(16px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position:        'fixed',
+        inset:           0,
+        zIndex:          500,
+        display:         'flex',
+        alignItems:      'center',
+        justifyContent:  'center',
+        padding:         24,
+        background:      'rgba(3,7,18,0.85)',
+        backdropFilter:  'blur(16px)',
+      }}
     >
       <div
-        className="relative w-full max-w-md rounded-2xl p-10"
-        style={{ background: '#112240', border: '1px solid rgba(56,189,248,0.15)', boxShadow: '0 40px 100px rgba(0,0,0,0.6)' }}
+        style={{
+          position:   'relative',
+          width:      '100%',
+          maxWidth:   440,
+          background: S.panel,
+          border:     `1px solid ${S.b1}`,
+          borderRadius: 20,
+          boxShadow:  '0 40px 100px rgba(0,0,0,0.6)',
+        }}
       >
-        <button onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-sm"
-          style={{ background: 'rgba(56,189,248,0.06)', color: '#94a8c8' }}>x</button>
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{
+            position:       'absolute',
+            top:            16,
+            right:          16,
+            width:          30,
+            height:         30,
+            borderRadius:   '50%',
+            background:     S.b3,
+            border:         'none',
+            color:          S.muted,
+            fontSize:       '1rem',
+            cursor:         'pointer',
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            fontFamily:     'inherit',
+          }}
+        >✕</button>
 
-        <div className="text-center text-2xl font-extrabold mb-6"
-          style={{ background: 'linear-gradient(135deg,#e0f2fe,#38bdf8,#2dd4bf)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          FinOrbit
-        </div>
+        <div style={{ padding: '40px 36px 36px' }}>
+          {/* Logo */}
+          <div
+            style={{
+              textAlign:   'center',
+              fontSize:    '1.5rem',
+              fontWeight:  800,
+              marginBottom: 24,
+              background:  'linear-gradient(135deg,#e0f2fe,#38bdf8,#2dd4bf)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >FinOrbit</div>
 
-        <div className="flex rounded-lg p-1 mb-7" style={{ background: 'rgba(56,189,248,0.06)' }}>
-          {(['signin', 'signup'] as const).map(t => (
-            <button key={t} onClick={() => { setTab(t); setError(''); setSuccess('') }}
-              className="flex-1 py-2 rounded-md text-sm font-bold transition-all"
-              style={tab === t ? { background: '#162a4a', color: '#eef2fc' } : { color: '#94a8c8' }}>
-              {t === 'signin' ? 'Sign In' : 'Create Account'}
-            </button>
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }}>
-            {error}
+          {/* Tabs */}
+          <div
+            style={{
+              display:      'flex',
+              background:   S.b3,
+              borderRadius: 8,
+              padding:      3,
+              marginBottom: 28,
+            }}
+          >
+            {(['signin', 'signup'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => switchTab(t)}
+                style={{
+                  flex:         1,
+                  padding:      '9px 0',
+                  borderRadius: 6,
+                  fontSize:     '0.82rem',
+                  fontWeight:   700,
+                  cursor:       'pointer',
+                  border:       'none',
+                  fontFamily:   'inherit',
+                  background:   tab === t ? '#162a4a' : 'transparent',
+                  color:        tab === t ? S.text    : S.muted,
+                  transition:   'all .2s',
+                }}
+              >
+                {t === 'signin' ? 'Sign In' : 'Create Account'}
+              </button>
+            ))}
           </div>
-        )}
-        {success && (
-          <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399' }}>
-            {success}
-          </div>
-        )}
 
-        {tab === 'signin' && (
-          <div className="space-y-4">
+          {/* Error / Success */}
+          {error && (
+            <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: '0.78rem', color: S.red, marginBottom: 14 }}>
+              {error}
+            </div>
+          )}
+          {success && (
+            <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: '0.78rem', color: S.green, marginBottom: 14 }}>
+              {success}
+            </div>
+          )}
+
+          {/* ── SIGN IN ── */}
+          {tab === 'signin' && (
             <div>
-              <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>Email</label>
-              <input value={siEmail} onChange={e => setSiEmail(e.target.value)} type="email" placeholder="you@example.com"
+              <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Email</label>
+              <input
+                value={siEmail}
+                onChange={e => setSiEmail(e.target.value)}
+                type="email"
+                placeholder="you@example.com"
                 onKeyDown={e => e.key === 'Enter' && handleSignIn()}
-                className="w-full rounded-lg px-4 py-3 text-sm outline-none"
-                style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.15)', color: '#eef2fc' }} />
-            </div>
-            <div>
-              <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>Password</label>
-              <div className="relative">
-                <input value={siPassword} onChange={e => setSiPassword(e.target.value)}
-                  type={showPassword ? 'text' : 'password'} placeholder="Enter your password"
+                style={inputStyle}
+              />
+              <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Password</label>
+              <div style={{ position: 'relative', marginBottom: 14 }}>
+                <input
+                  value={siPassword}
+                  onChange={e => setSiPassword(e.target.value)}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
                   onKeyDown={e => e.key === 'Enter' && handleSignIn()}
-                  className="w-full rounded-lg px-4 py-3 pr-12 text-sm outline-none"
-                  style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.15)', color: '#eef2fc' }} />
-                <button onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: '#526480' }}>
-                  {showPassword ? 'Hide' : 'Show'}
+                  style={{ ...inputStyle, marginBottom: 0, paddingRight: 46 }}
+                />
+                <button
+                  onClick={() => setShowPassword(p => !p)}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: S.dim, fontSize: '0.85rem' }}
+                >
+                  {showPassword ? '🙈' : '👁'}
                 </button>
               </div>
-            </div>
-            <button onClick={handleSignIn} disabled={loading}
-              className="w-full py-3 rounded-lg text-sm font-extrabold uppercase tracking-wider transition-all disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg,#38bdf8,#2dd4bf)', color: '#020d1a' }}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-            <div className="grid grid-cols-2 gap-3">
-              {['Google', 'Apple'].map(p => (
-                <button key={p} onClick={handleGoogleSignIn}
-                  className="py-3 rounded-lg text-sm font-semibold transition-all"
-                  style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.1)', color: '#eef2fc' }}>
-                  {p}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: S.muted, cursor: 'pointer' }}>
+                  <input type="checkbox" defaultChecked style={{ accentColor: S.brand }} /> Remember me
+                </label>
+                <button style={{ fontSize: '0.78rem', color: S.brand, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Forgot password?
                 </button>
-              ))}
+              </div>
+              <button
+                onClick={handleSignIn}
+                disabled={loading}
+                style={{ width: '100%', padding: '14px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}
+              >
+                {loading ? 'Signing in…' : 'Sign In →'}
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.dim }}>
+                <div style={{ flex: 1, height: 1, background: S.b2 }}/> or continue with <div style={{ flex: 1, height: 1, background: S.b2 }}/>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {['🌐 Google', '🍎 Apple'].map(p => (
+                  <button key={p} style={{ padding: '11px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, background: S.deep, border: `1px solid ${S.b2}`, color: S.text, cursor: 'pointer', fontFamily: 'inherit' }}>{p}</button>
+                ))}
+              </div>
+              <p style={{ textAlign: 'center', fontSize: '0.8rem', color: S.muted, marginTop: 20 }}>
+                Don&apos;t have an account?{' '}
+                <span onClick={() => switchTab('signup')} style={{ color: S.brand, cursor: 'pointer', fontWeight: 700 }}>Create one →</span>
+              </p>
             </div>
-            <p className="text-center text-sm" style={{ color: '#94a8c8' }}>
-              No account?{' '}
-              <span onClick={() => setTab('signup')} className="font-bold cursor-pointer" style={{ color: '#22d3ee' }}>Create one</span>
-            </p>
-          </div>
-        )}
+          )}
 
-        {tab === 'signup' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>First Name</label>
-                <input value={suFirst} onChange={e => setSuFirst(e.target.value)} placeholder="Alex"
-                  className="w-full rounded-lg px-4 py-3 text-sm outline-none"
-                  style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.15)', color: '#eef2fc' }} />
-              </div>
-              <div>
-                <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>Last Name</label>
-                <input value={suLast} onChange={e => setSuLast(e.target.value)} placeholder="Morgan"
-                  className="w-full rounded-lg px-4 py-3 text-sm outline-none"
-                  style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.15)', color: '#eef2fc' }} />
-              </div>
-            </div>
+          {/* ── SIGN UP ── */}
+          {tab === 'signup' && (
             <div>
-              <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>Email</label>
-              <input value={suEmail} onChange={e => setSuEmail(e.target.value)} type="email" placeholder="you@example.com"
-                className="w-full rounded-lg px-4 py-3 text-sm outline-none"
-                style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.15)', color: '#eef2fc' }} />
-            </div>
-            <div>
-              <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>Password</label>
-              <div className="relative">
-                <input value={suPassword} onChange={e => setSuPassword(e.target.value)}
-                  type={showPassword ? 'text' : 'password'} placeholder="Minimum 8 characters"
-                  className="w-full rounded-lg px-4 py-3 pr-12 text-sm outline-none"
-                  style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.15)', color: '#eef2fc' }} />
-                <button onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: '#526480' }}>
-                  {showPassword ? 'Hide' : 'Show'}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>First Name</label>
+                  <input value={suFirst} onChange={e => setSuFirst(e.target.value)} placeholder="Alex" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Last Name</label>
+                  <input value={suLast} onChange={e => setSuLast(e.target.value)} placeholder="Morgan" style={inputStyle} />
+                </div>
+              </div>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Email</label>
+              <input value={suEmail} onChange={e => setSuEmail(e.target.value)} type="email" placeholder="you@example.com" style={inputStyle} />
+              <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Password</label>
+              <div style={{ position: 'relative', marginBottom: 14 }}>
+                <input
+                  value={suPassword}
+                  onChange={e => setSuPassword(e.target.value)}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min 8 chars, 1 uppercase, 1 number"
+                  style={{ ...inputStyle, marginBottom: 0, paddingRight: 46 }}
+                />
+                <button onClick={() => setShowPassword(p => !p)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: S.dim, fontSize: '0.85rem' }}>
+                  {showPassword ? '🙈' : '👁'}
                 </button>
               </div>
-            </div>
-            <div>
-              <label className="block mb-1 text-xs font-mono uppercase tracking-widest" style={{ color: '#94a8c8' }}>Plan</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'free', name: 'Launch', price: 'Free forever' },
-                  { id: 'pro', name: 'Autopilot Pro', price: '$29/mo' }
-                ].map(plan => (
-                  <div key={plan.id} onClick={() => setSelectedPlan(plan.id)}
-                    className="p-3 rounded-lg cursor-pointer transition-all"
-                    style={{
-                      border: selectedPlan === plan.id ? '1px solid #22d3ee' : '1px solid rgba(56,189,248,0.1)',
-                      background: selectedPlan === plan.id ? 'rgba(34,211,238,0.06)' : '#081528'
-                    }}>
-                    <div className="text-sm font-bold" style={{ color: selectedPlan === plan.id ? '#22d3ee' : '#eef2fc' }}>{plan.name}</div>
-                    <div className="text-xs font-mono mt-1" style={{ color: '#94a8c8' }}>{plan.price}</div>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Choose Your Plan</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+                {([['free','Launch','Free forever'],['pro','Autopilot Pro ✦','$29/mo · 14-day trial']] as const).map(([id,name,price]) => (
+                  <div
+                    key={id}
+                    onClick={() => setSelectedPlan(id)}
+                    style={{ padding: '11px 12px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${selectedPlan===id ? S.brand : S.b2}`, background: selectedPlan===id ? 'rgba(34,211,238,0.06)' : S.deep }}
+                  >
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: selectedPlan===id ? S.brand : S.text }}>{name}</div>
+                    <div style={{ fontSize: '0.7rem', fontFamily: 'DM Mono,monospace', color: S.muted, marginTop: 2 }}>{price}</div>
                   </div>
                 ))}
               </div>
+              <button
+                onClick={handleSignUp}
+                disabled={loading}
+                style={{ width: '100%', padding: '14px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}
+              >
+                {loading ? 'Creating account…' : 'Create My Account →'}
+              </button>
+              <p style={{ fontSize: '0.72rem', color: S.dim, textAlign: 'center', marginTop: 14, lineHeight: 1.6 }}>
+                By creating an account you agree to our Terms and Privacy Policy.
+              </p>
+              <p style={{ textAlign: 'center', fontSize: '0.8rem', color: S.muted, marginTop: 14 }}>
+                Already have an account?{' '}
+                <span onClick={() => switchTab('signin')} style={{ color: S.brand, cursor: 'pointer', fontWeight: 700 }}>Sign in →</span>
+              </p>
             </div>
-            <button onClick={handleSignUp} disabled={loading}
-              className="w-full py-3 rounded-lg text-sm font-extrabold uppercase tracking-wider transition-all disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg,#38bdf8,#2dd4bf)', color: '#020d1a' }}>
-              {loading ? 'Creating account...' : 'Create My Account'}
-            </button>
-            <p className="text-center text-sm" style={{ color: '#94a8c8' }}>
-              Already have an account?{' '}
-              <span onClick={() => setTab('signin')} className="font-bold cursor-pointer" style={{ color: '#22d3ee' }}>Sign in</span>
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

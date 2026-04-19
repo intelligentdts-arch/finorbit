@@ -1,16 +1,27 @@
 @import "tailwindcss";
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 html { scroll-behavior: smooth; }
+
 body {
   background: #040c1a;
   color: #eef2fc;
   font-family: 'Syne', sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
 button, input, textarea, select { font-family: inherit; }
-::-webkit-scrollbar { width: 4px; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.15); border-radius: 2px; }
 
@@ -22,13 +33,12 @@ button, input, textarea, select { font-family: inherit; }
 }
 
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-@keyframes ring-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 @keyframes pulse-brand {
   0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,211,238,.5)}
   50%{opacity:.6;box-shadow:0 0 0 5px rgba(34,211,238,0)}
 }
+@keyframes ring-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes shimmer {
   0%{background-position:-200% 0}
   100%{background-position:200% 0}
@@ -40,4 +50,10 @@ button, input, textarea, select { font-family: inherit; }
 @keyframes typing-bounce {
   0%,80%,100%{transform:translateY(0)}
   40%{transform:translateY(-6px)}
+}
+
+.skeleton {
+  background: linear-gradient(90deg,rgba(56,189,248,.06) 25%,rgba(56,189,248,.12) 50%,rgba(56,189,248,.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

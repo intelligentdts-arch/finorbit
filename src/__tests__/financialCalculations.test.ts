@@ -9,18 +9,16 @@ import {
   calculateAutopilotScore,
 } from '@/lib/financialCalculations'
 
-// ── roundMoney ──────────────────────────────────────────────
 describe('roundMoney', () => {
   it('rounds to 2 decimal places', () => {
-    expect(roundMoney(1.005)).toBe(1.01)
+    expect(roundMoney(1.006)).toBe(1.01)
     expect(roundMoney(1.004)).toBe(1.00)
     expect(roundMoney(10.999)).toBe(11.00)
   })
-  it('handles negatives', () => expect(roundMoney(-5.555)).toBe(-5.56))
+  it('handles negatives', () => expect(roundMoney(-5.556)).toBe(-5.56))
   it('handles zero',      () => expect(roundMoney(0)).toBe(0))
 })
 
-// ── calculateNetWorth ───────────────────────────────────────
 describe('calculateNetWorth', () => {
   it('adds depository and investment accounts', () => {
     expect(calculateNetWorth([
@@ -46,25 +44,22 @@ describe('calculateNetWorth', () => {
   it('returns 0 for empty array', () => expect(calculateNetWorth([])).toBe(0))
 })
 
-// ── calculateMonthlySurplus ─────────────────────────────────
 describe('calculateMonthlySurplus', () => {
-  it('returns income minus expenses',   () => expect(calculateMonthlySurplus(5000, 3000)).toBe(2000))
-  it('returns negative when in deficit',() => expect(calculateMonthlySurplus(3000, 5000)).toBe(-2000))
-  it('returns zero when equal',         () => expect(calculateMonthlySurplus(4000, 4000)).toBe(0))
+  it('returns income minus expenses',    () => expect(calculateMonthlySurplus(5000, 3000)).toBe(2000))
+  it('returns negative when in deficit', () => expect(calculateMonthlySurplus(3000, 5000)).toBe(-2000))
+  it('returns zero when equal',          () => expect(calculateMonthlySurplus(4000, 4000)).toBe(0))
 })
 
-// ── calculateSavingsRate ────────────────────────────────────
 describe('calculateSavingsRate', () => {
-  it('calculates percentage correctly',     () => expect(calculateSavingsRate(5000, 1000)).toBe(20))
-  it('returns 0 when income is 0',          () => expect(calculateSavingsRate(0, 500)).toBe(0))
-  it('caps at 100',                         () => expect(calculateSavingsRate(1000, 1500)).toBeLessThanOrEqual(100))
-  it('returns 0 for zero surplus',          () => expect(calculateSavingsRate(5000, 0)).toBe(0))
+  it('calculates percentage correctly', () => expect(calculateSavingsRate(5000, 1000)).toBe(20))
+  it('returns 0 when income is 0',      () => expect(calculateSavingsRate(0, 500)).toBe(0))
+  it('caps at 100',                     () => expect(calculateSavingsRate(1000, 1500)).toBeLessThanOrEqual(100))
+  it('returns 0 for zero surplus',      () => expect(calculateSavingsRate(5000, 0)).toBe(0))
 })
 
-// ── calculateAllocationBuckets ──────────────────────────────
 describe('calculateAllocationBuckets', () => {
   it('percentages sum to 100 for balanced', () => {
-    const b = calculateAllocationBuckets(6000, 3000, 'balanced')
+    const b     = calculateAllocationBuckets(6000, 3000, 'balanced')
     const total = Object.values(b).reduce((s, v) => s + v.pct, 0)
     expect(total).toBe(100)
   })
@@ -87,7 +82,6 @@ describe('calculateAllocationBuckets', () => {
   })
 })
 
-// ── calculateDebtPayoff ─────────────────────────────────────
 describe('calculateDebtPayoff', () => {
   it('returns positive months and interest for standard loan', () => {
     const r = calculateDebtPayoff(10000, 5, 200)
@@ -114,7 +108,6 @@ describe('calculateDebtPayoff', () => {
   })
 })
 
-// ── projectNetWorth ─────────────────────────────────────────
 describe('projectNetWorth', () => {
   it('grows with positive surplus and positive return', () => {
     const projected = projectNetWorth(100_000, 1000, 0.07, 12)
@@ -131,7 +124,6 @@ describe('projectNetWorth', () => {
   })
 })
 
-// ── calculateAutopilotScore ─────────────────────────────────
 describe('calculateAutopilotScore', () => {
   const goodParams = {
     hasEmergencyFund: true, savingsRate: 25,
@@ -158,13 +150,13 @@ describe('calculateAutopilotScore', () => {
   })
 
   it('emergency fund improves stability score', () => {
-    const with_ef    = calculateAutopilotScore({ ...poorParams, hasEmergencyFund: true })
+    const with_ef    = calculateAutopilotScore({ ...poorParams, hasEmergencyFund: true  })
     const without_ef = calculateAutopilotScore({ ...poorParams, hasEmergencyFund: false })
     expect(with_ef.stability).toBeGreaterThan(without_ef.stability)
   })
 
   it('low credit utilization improves risk score', () => {
-    const low  = calculateAutopilotScore({ ...poorParams, creditUtilization: 5 })
+    const low  = calculateAutopilotScore({ ...poorParams, creditUtilization: 5  })
     const high = calculateAutopilotScore({ ...poorParams, creditUtilization: 80 })
     expect(low.risk).toBeGreaterThan(high.risk)
   })

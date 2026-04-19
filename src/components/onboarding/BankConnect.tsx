@@ -1,155 +1,153 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { usePlaidLink } from 'react-plaid-link'
+import { usePlaidLink, type PlaidLinkOnSuccessMetadata } from 'react-plaid-link'
 import { supabase } from '@/lib/supabase'
 import { useFinancialStore } from '@/store/financialStore'
 
 interface BankConnectProps {
   onSuccess: () => void
-  onSkip: () => void
+  onSkip:    () => void
+}
+
+const S = {
+  grad:  'linear-gradient(135deg,#38bdf8,#2dd4bf)',
+  deep:  '#081528',
+  panel: '#112240',
+  b1:    'rgba(56,189,248,0.15)',
+  b2:    'rgba(56,189,248,0.10)',
+  brand: '#22d3ee',
+  muted: '#94a8c8',
+  dim:   '#526480',
+  green: '#34d399',
+  red:   '#f87171',
 }
 
 export default function BankConnect({ onSuccess, onSkip }: BankConnectProps) {
-  const [linkToken, setLinkToken] = useState<string | null>(null)
+  const [linkToken,  setLinkToken]  = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
-  const [status, setStatus] = useState('')
-  const [connected, setConnected] = useState(false)
+  const [status,     setStatus]     = useState('')
+  const [connected,  setConnected]  = useState(false)
+
   const { fetchFinancialData } = useFinancialStore()
 
   const getLinkToken = async () => {
     setConnecting(true)
     setStatus('Preparing secure connection…')
-
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
 
-      const response = await fetch('/api/plaid/create-link-token', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      const res  = await fetch('/api/plaid/create-link-token', {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-
-      const data = await response.json()
+      const data = await res.json() as { link_token?: string; error?: string }
       if (data.error) throw new Error(data.error)
-
-      setLinkToken(data.link_token)
+      setLinkToken(data.link_token ?? null)
       setStatus('Ready to connect')
-    } catch (error: any) {
-      setStatus(`Error: ${error.message}`)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      setStatus(`Error: ${msg}`)
       setConnecting(false)
     }
   }
 
-  const onPlaidSuccess = useCallback(async (publicToken: string, metadata: any) => {
-    setStatus('Connecting your accounts…')
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
+  const onPlaidSuccess = useCallback(
+    async (publicToken: string, metadata: PlaidLinkOnSuccessMetadata) => {
+      setStatus('Connecting your accounts…')
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw new Error('Not authenticated')
 
-      const response = await fetch('/api/plaid/exchange-token', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          public_token: publicToken,
-          institution_name: metadata.institution.name,
-          institution_id: metadata.institution.institution_id
+        const institutionName = metadata.institution?.name ?? 'Your Bank'
+        const institutionId   = metadata.institution?.institution_id ?? ''
+
+        const res = await fetch('/api/plaid/exchange-token', {
+          method:  'POST',
+          headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            public_token:     publicToken,
+            institution_name: institutionName,
+            institution_id:   institutionId,
+          }),
         })
-      })
+        const data = await res.json() as { error?: string }
+        if (data.error) throw new Error(data.error)
 
-      const data = await response.json()
-      if (data.error) throw new Error(data.error)
-
-      setStatus('Fetching your financial data…')
-      await fetchFinancialData()
-      setConnected(true)
-      setStatus(`${metadata.institution.name} connected successfully!`)
-
-      setTimeout(onSuccess, 1500)
-    } catch (error: any) {
-      setStatus(`Connection failed: ${error.message}`)
-      setConnecting(false)
-    }
-  }, [onSuccess, fetchFinancialData])
+        setStatus('Fetching your financial data…')
+        await fetchFinancialData()
+        setConnected(true)
+        setStatus(`${institutionName} connected successfully!`)
+        setTimeout(onSuccess, 1500)
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error'
+        setStatus(`Connection failed: ${msg}`)
+        setConnecting(false)
+      }
+    },
+    [onSuccess, fetchFinancialData],
+  )
 
   const { open, ready } = usePlaidLink({
-    token: linkToken,
+    token:     linkToken,
     onSuccess: onPlaidSuccess,
-    onExit: () => {
-      setConnecting(false)
-      setStatus('')
-    }
+    onExit:    () => { setConnecting(false); setStatus('') },
   })
 
-  // Auto-open Plaid once we have the token
-  if (linkToken && ready && connecting && !connected) {
-    open()
-  }
+  if (linkToken && ready && connecting && !connected) open()
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold mb-2" style={{ letterSpacing: '-0.02em' }}>
+      <h2 style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 8 }}>
         Connect your bank
       </h2>
-      <p className="text-sm mb-6" style={{ color: '#94a8c8', lineHeight: 1.7 }}>
-        FinOrbit uses bank-level 256-bit encryption via Plaid — the same technology trusted by Venmo, Robinhood, and Coinbase. We read data only — we never move money without your explicit approval.
+      <p style={{ fontSize: '0.87rem', color: S.muted, lineHeight: 1.7, marginBottom: 24 }}>
+        FinOrbit uses bank-level 256-bit encryption via Plaid. We read data only — we never move money without your explicit approval.
       </p>
 
       {!connecting ? (
         <>
-          {/* Bank logos */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            {[
-              { icon: '🏦', name: 'Chase' },
-              { icon: '🏛️', name: 'Bank of America' },
-              { icon: '🌐', name: 'Wells Fargo' },
-              { icon: '💜', name: '12,000+ banks' }
-            ].map(bank => (
-              <div key={bank.name}
-                className="rounded-xl p-4 text-center"
-                style={{ background: '#081528', border: '1px solid rgba(56,189,248,0.1)' }}>
-                <div className="text-2xl mb-2">{bank.icon}</div>
-                <div className="text-sm font-semibold" style={{ color: '#94a8c8' }}>{bank.name}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+            {[['🏦','Chase'],['🏛️','Bank of America'],['🌐','Wells Fargo'],['🔌','12,000+ banks']].map(([icon, name]) => (
+              <div key={name} style={{ background: S.deep, border: `1px solid ${S.b2}`, borderRadius: 10, padding: '15px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>{icon}</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: S.muted }}>{name}</div>
               </div>
             ))}
           </div>
 
-          <button onClick={getLinkToken}
-            className="w-full py-4 rounded-lg font-extrabold text-sm uppercase tracking-wider mb-3 transition-all"
-            style={{ background: 'linear-gradient(135deg,#38bdf8,#2dd4bf)', color: '#020d1a', boxShadow: '0 8px 28px rgba(34,211,238,0.25)' }}>
+          <button
+            onClick={getLinkToken}
+            style={{ width: '100%', padding: '15px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', marginBottom: 12, boxShadow: '0 8px 28px rgba(34,211,238,0.25)' }}
+          >
             Connect My Bank Securely →
           </button>
 
-          <button onClick={onSkip}
-            className="w-full py-3 rounded-lg text-sm font-semibold transition-all"
-            style={{ border: '1px solid rgba(56,189,248,0.1)', color: '#94a8c8' }}>
-            Skip for now — I'll connect later
+          <button
+            onClick={onSkip}
+            style={{ width: '100%', padding: '12px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${S.b2}`, background: 'transparent', color: S.muted, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Skip for now — I&apos;ll connect later
           </button>
         </>
       ) : (
-        <div className="text-center py-8">
+        <div style={{ textAlign: 'center', padding: '32px 0' }}>
           {connected ? (
-            <div className="text-4xl mb-4">✅</div>
+            <div style={{ fontSize: '3rem', marginBottom: 16 }}>✅</div>
           ) : (
-            <div className="w-12 h-12 border-2 rounded-full animate-spin mx-auto mb-4"
-              style={{ borderColor: 'rgba(34,211,238,0.2)', borderTopColor: '#22d3ee' }}></div>
+            <div style={{ width: 48, height: 48, border: '3px solid rgba(34,211,238,0.2)', borderTopColor: S.brand, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }}/>
           )}
-          <p className="text-sm font-mono" style={{ color: '#94a8c8' }}>{status}</p>
+          <p style={{ fontSize: '0.88rem', fontFamily: 'DM Mono,monospace', color: S.muted }}>{status}</p>
           {connected && (
-            <p className="text-sm mt-2" style={{ color: '#34d399' }}>
-              Redirecting to your dashboard…
-            </p>
+            <p style={{ fontSize: '0.84rem', color: S.green, marginTop: 8 }}>Redirecting…</p>
           )}
         </div>
       )}
 
-      <div className="flex items-center gap-2 mt-5 p-3 rounded-lg"
-        style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.1)' }}>
-        <span className="text-sm">🔒</span>
-        <p className="text-xs font-mono" style={{ color: '#526480' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 20, padding: '12px', borderRadius: 8, background: 'rgba(34,211,238,0.05)', border: `1px solid ${S.b2}` }}>
+        <span>🔒</span>
+        <p style={{ fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.dim }}>
           Your credentials are never stored on FinOrbit servers. Plaid handles all authentication directly with your bank.
         </p>
       </div>
