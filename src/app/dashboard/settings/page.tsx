@@ -124,7 +124,7 @@ export default function SettingsPage() {
           <div style={{ fontSize:"0.7rem", fontFamily:"DM Mono,monospace", color:S.dim, textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:16 }}>Account</div>
           <div style={{ fontSize:"0.84rem", color:S.muted, marginBottom:14 }}>Signing out will end your current session.</div>
           <button
-            onClick={() => useAuthStore.getState().signOut().then(() => window.location.href="/")}
+            onClick={() => useAuthStore.getState().signOut().then(() => { window.location.href = "/" })}
             style={{ padding:"10px 20px", borderRadius:8, fontSize:"0.82rem", fontWeight:700, border:"1px solid rgba(248,113,113,.25)", color:S.red, background:"transparent", cursor:"pointer", fontFamily:"inherit" }}>
             Sign Out
           </button>

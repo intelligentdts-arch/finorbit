@@ -44,7 +44,7 @@ export default function DashboardShell({ title, children }: { title: string; chi
     if (!loading && !user) router.push("/")
   }, [user, loading])
 
-  const handleSignOut = async () => { await signOut(); router.push("/") }
+  const handleSignOut = async () => { await signOut(); window.location.href = "/" }
   const isActive = (p: string) => pathname === p
 
   const navBtn = (item: { icon: string; label: string; path: string; badge?: string }) => (
