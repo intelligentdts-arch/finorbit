@@ -149,8 +149,7 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
           onClick={() => router.push('/')}
           style={{
             padding: '22px 22px 18px', fontSize: '1.2rem', fontWeight: 800,
-            borderBottom: `1px solid ${S.b3}`, background: 'none',
-            border: 'none', borderBottom: `1px solid ${S.b3}`,
+            background: 'none', border: 'none', borderBottom: `1px solid ${S.b3}`,
             cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
             ...S.gradText,
           }}>
