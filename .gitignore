@@ -43,3 +43,5 @@ next-env.d.ts
 fix-tests.ps1
 test-results.txt
 *.ps1
+
+.env.local
