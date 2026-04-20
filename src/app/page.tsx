@@ -39,7 +39,7 @@ export default function Home() {
   const [authTab,    setAuthTab]    = useState<'signin'|'signup'>('signup')
   const [scrolled,   setScrolled]   = useState(false)
   const [activeTab,  setActiveTab]  = useState<'personal'|'business'|'gov'>('personal')
-  const { user, loading, refreshUser } = useAuthStore()
+  const { user, loading, refreshUser, signOut } = useAuthStore()
   const router = useRouter()
   const handleSignOut = async () => { await signOut(); window.location.href = "/" }
 
