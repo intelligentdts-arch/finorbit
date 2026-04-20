@@ -45,6 +45,14 @@ export default function DashboardShell({ title, children }: { title: string; chi
     if (!loading && !user) router.push("/")
   }, [user, loading])
 
+    if (loading) {
+    return (
+      <div style={{ minHeight:"100vh", background:"#040c1a", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ width:36, height:36, border:"3px solid rgba(34,211,238,0.2)", borderTopColor:"#22d3ee", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>
+      </div>
+    )
+  }
+
   const handleSignOut = async () => { await signOut(); window.location.href = "/" }
   const isActive = (p: string) => pathname === p
 
