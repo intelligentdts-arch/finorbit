@@ -20,6 +20,7 @@ const NAV = [
   { icon:"IN", label:"Investments",  path:"/dashboard/investments"        },
   { icon:"BR", label:"Borrowing",    path:"/dashboard/borrowing"          },
   { icon:"RS", label:"Risk Shield",  path:"/dashboard/risk"               },
+  { icon:"BK", label:"Accounts",     path:"/dashboard/accounts"           },
 ]
 
 const SETTINGS = [
