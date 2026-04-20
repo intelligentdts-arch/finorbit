@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
@@ -162,7 +162,7 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
             <div style={{ minWidth: 0, textAlign: 'left' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: S.text }}>{user?.first_name} {user?.last_name}</div>
               <div style={{ fontSize: '0.65rem', fontFamily: 'DM Mono,monospace', color: '#2dd4bf' }}>
-                {user?.plan === 'pro' ? 'Autopilot Pro' : 'Launch'} · Sign out
+                {user?.plan === 'pro' ? 'Autopilot Pro' : 'Launch'} Â· Sign out
               </div>
             </div>
           </button>
@@ -174,7 +174,7 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => setSidebarOpen(true)}
               style={{ width: 36, height: 36, background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '1.1rem', fontFamily: 'inherit', color: S.muted }}>
-              ☰
+              â˜°
             </button>
             <h1 style={{ fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.01em' }}>{title}</h1>
           </div>
