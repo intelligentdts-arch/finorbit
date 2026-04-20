@@ -273,7 +273,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'signup' }: Au
                 </button>
               </div>
               <button
-                onClick={handleSignIn}
+                data-testid="signin-submit" onClick={handleSignIn}
                 disabled={loading}
                 style={{ width: '100%', padding: '14px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}
               >
@@ -336,7 +336,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'signup' }: Au
                 ))}
               </div>
               <button
-                onClick={handleSignUp}
+                data-testid="signup-submit" onClick={handleSignUp}
                 disabled={loading}
                 style={{ width: '100%', padding: '14px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}
               >
