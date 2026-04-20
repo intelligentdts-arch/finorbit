@@ -93,7 +93,7 @@ export default function DashboardShell({ title, children }: { title: string; chi
       <div style={{ flex:1, marginLeft:240, minWidth:0, display:"flex", flexDirection:"column" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 32px", borderBottom:`1px solid ${S.b3}`, background:"rgba(4,12,26,.9)", backdropFilter:"blur(12px)", position:"sticky", top:0, zIndex:40 }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-            <button onClick={() => setSidebarOpen(true)} style={{ width:36, height:36, background:S.panel, border:`1px solid ${S.b2}`, borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", fontFamily:"inherit" }}>Menu</button>
+            <button onClick={() => setSidebarOpen(true)} style={{ width:36, height:36, background:S.panel, border:`1px solid ${S.b2}`, borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", fontFamily:"inherit" }}>☰</button>
             <h1 style={{ fontSize:"1.05rem", fontWeight:800, letterSpacing:"-0.01em" }}>{title}</h1>
           </div>
           <div style={{ display:"flex", gap:10 }}>
