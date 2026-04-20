@@ -9,10 +9,10 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 
 const S = {
-  panel: '#112240', deep: '#081528', panel2: '#162a4a',
+  panel: '#112240', deep: '#081528',
   b1: 'rgba(56,189,248,0.15)', b2: 'rgba(56,189,248,0.10)', b3: 'rgba(56,189,248,0.06)',
   muted: '#94a8c8', dim: '#526480', green: '#34d399', red: '#f87171',
-  cyan: '#38bdf8', teal: '#2dd4bf', brand: '#22d3ee', amber: '#fbbf24',
+  cyan: '#38bdf8', teal: '#2dd4bf', brand: '#22d3ee',
   grad: 'linear-gradient(135deg,#38bdf8,#2dd4bf)',
   gradText: {
     background: 'linear-gradient(135deg,#e0f2fe 0%,#38bdf8 55%,#2dd4bf 100%)',
@@ -23,31 +23,17 @@ const S = {
 }
 
 const typeIcon: Record<string, string> = {
-  depository: '🏦',
-  credit:     '💳',
-  investment: '📈',
-  loan:       '📋',
-  other:      '🔗',
+  depository: '🏦', credit: '💳', investment: '📈', loan: '📋', other: '🔗',
 }
 
 const typeLabel: Record<string, string> = {
-  depository: 'Bank Account',
-  credit:     'Credit Card',
-  investment: 'Investment',
-  loan:       'Loan',
-  other:      'Other',
-}
-
-interface PlaidHandlerType {
-  open:    () => void
-  destroy: () => void
+  depository: 'Bank Account', credit: 'Credit Card', investment: 'Investment', loan: 'Loan', other: 'Other',
 }
 
 export default function AccountsPage() {
-  const [linkToken,    setLinkToken]    = useState<string | null>(null)
-  const [connecting,   setConnecting]   = useState(false)
-  const [status,       setStatus]       = useState('')
-  const [, setPlaidHandler] = useState<PlaidHandlerType | null>(null)
+  const [linkToken,  setLinkToken]  = useState<string | null>(null)
+  const [connecting, setConnecting] = useState(false)
+  const [status,     setStatus]     = useState('')
   const { data, fetchFinancialData } = useFinancialStore()
 
   useEffect(() => { fetchFinancialData() }, [])
@@ -62,7 +48,7 @@ export default function AccountsPage() {
     }
   }, [])
 
-  // Open Plaid when token is ready
+  // Open Plaid when token ready
   useEffect(() => {
     if (!linkToken) return
     const interval = setInterval(() => {
@@ -76,9 +62,9 @@ export default function AccountsPage() {
               const { data: { session } } = await supabase.auth.getSession()
               if (!session) return
               await fetch('/api/plaid/exchange-token', {
-                method:  'POST',
+                method: 'POST',
                 headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ public_token: publicToken, institution_name: 'New Account', institution_id: '' }),
+                body: JSON.stringify({ public_token: publicToken, institution_name: 'New Account', institution_id: '' }),
               })
               setStatus('Account connected!')
               await fetchFinancialData()
@@ -90,7 +76,6 @@ export default function AccountsPage() {
           },
           onExit: () => { setConnecting(false); setStatus('') },
         })
-        setPlaidHandler(handler)
         handler.open()
       }
     }, 100)
@@ -103,26 +88,21 @@ export default function AccountsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
-      const res  = await fetch('/api/plaid/create-link-token', {
-        method:  'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
+      const res  = await fetch('/api/plaid/create-link-token', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` } })
       const json = await res.json() as { link_token?: string; error?: string }
       if (json.error) throw new Error(json.error)
       setLinkToken(json.link_token ?? null)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error'
-      setStatus(`Error: ${msg}`)
+      setStatus(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setConnecting(false)
     }
   }
 
   const accounts    = data?.accounts ?? []
-  const totalAssets = accounts.filter(a => !['credit', 'loan'].includes(a.type)).reduce((s, a) => s + (a.balances.current ?? 0), 0)
-  const totalDebt   = accounts.filter(a =>  ['credit', 'loan'].includes(a.type)).reduce((s, a) => s + (a.balances.current ?? 0), 0)
+  const totalAssets = accounts.filter(a => !['credit','loan'].includes(a.type)).reduce((s, a) => s + (a.balances.current ?? 0), 0)
+  const totalDebt   = accounts.filter(a =>  ['credit','loan'].includes(a.type)).reduce((s, a) => s + (a.balances.current ?? 0), 0)
   const netWorth    = totalAssets - totalDebt
 
-  // Group by type
   const grouped: Record<string, typeof accounts> = {}
   accounts.forEach(acc => {
     if (!grouped[acc.type]) grouped[acc.type] = []
@@ -132,13 +112,13 @@ export default function AccountsPage() {
   return (
     <DashboardShell title="Accounts">
 
-      {/* Summary strip */}
+      {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Accounts', value: accounts.length.toString(), color: S.cyan,    accent: S.cyan    },
-          { label: 'Total Assets',   value: fmt(totalAssets),           color: '#5eead4', accent: '#5eead4' },
-          { label: 'Total Debt',     value: fmt(totalDebt),             color: S.red,     accent: S.red     },
-          { label: 'Net Worth',      value: fmt(netWorth),              color: undefined, accent: S.cyan, grad: true },
+          { label: 'Total Accounts', value: accounts.length.toString(), color: S.cyan,    accent: S.cyan,    grad: false },
+          { label: 'Total Assets',   value: fmt(totalAssets),           color: '#5eead4', accent: '#5eead4', grad: false },
+          { label: 'Total Debt',     value: fmt(totalDebt),             color: S.red,     accent: S.red,     grad: false },
+          { label: 'Net Worth',      value: fmt(netWorth),              color: S.cyan,    accent: S.cyan,    grad: true  },
         ].map(k => (
           <div key={k.label} style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: '20px 22px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,${k.accent},transparent)`, opacity: .7 }}/>
@@ -153,7 +133,7 @@ export default function AccountsPage() {
         {/* Left */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Add account */}
+          {/* Add account banner */}
           <div style={{ background: S.panel, border: `1px solid ${S.b1}`, borderRadius: 14, padding: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 4 }}>Connect a new account</div>
@@ -171,7 +151,7 @@ export default function AccountsPage() {
             </div>
           )}
 
-          {/* Account list */}
+          {/* Account groups */}
           {accounts.length === 0 ? (
             <div style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 14 }}>🏦</div>
@@ -192,9 +172,8 @@ export default function AccountsPage() {
                   </div>
                 </div>
                 {accs.map(acc => {
-                  const isDebt    = ['credit', 'loan'].includes(acc.type)
-                  const balance   = acc.balances.current ?? 0
-                  const available = acc.balances.available
+                  const isDebt  = ['credit','loan'].includes(acc.type)
+                  const balance = acc.balances.current ?? 0
                   return (
                     <div key={acc.account_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: S.deep, border: `1px solid ${S.b3}`, borderRadius: 10, marginBottom: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -203,8 +182,8 @@ export default function AccountsPage() {
                           <span style={{ fontSize: '0.68rem', fontFamily: 'DM Mono,monospace', color: S.dim }}>{acc.institution_name}</span>
                           <span style={{ fontSize: '0.62rem', fontFamily: 'DM Mono,monospace', padding: '2px 8px', borderRadius: 100, background: S.b3, color: S.muted }}>{acc.subtype}</span>
                         </div>
-                        {available != null && !isDebt && (
-                          <div style={{ fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.dim, marginTop: 4 }}>{fmt(available)} available</div>
+                        {acc.balances.available != null && !isDebt && (
+                          <div style={{ fontSize: '0.72rem', fontFamily: 'DM Mono,monospace', color: S.dim, marginTop: 4 }}>{fmt(acc.balances.available)} available</div>
                         )}
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 16 }}>
@@ -229,11 +208,11 @@ export default function AccountsPage() {
           <div style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: 22 }}>
             <div style={{ fontSize: '0.7rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>Supported Account Types</div>
             {[
-              { icon: '🏦', label: 'Checking & Savings',   desc: 'All major banks'          },
-              { icon: '💳', label: 'Credit Cards',          desc: 'Visa, Mastercard, Amex'   },
-              { icon: '📈', label: 'Investment Accounts',   desc: 'Brokerage, 401k, IRA'     },
-              { icon: '📋', label: 'Loans',                 desc: 'Mortgage, auto, student'  },
-              { icon: '🏛️', label: '12,000+ institutions', desc: 'Powered by Plaid'         },
+              { icon: '🏦', label: 'Checking & Savings',   desc: 'All major banks'         },
+              { icon: '💳', label: 'Credit Cards',          desc: 'Visa, Mastercard, Amex'  },
+              { icon: '📈', label: 'Investment Accounts',   desc: 'Brokerage, 401k, IRA'    },
+              { icon: '📋', label: 'Loans',                 desc: 'Mortgage, auto, student' },
+              { icon: '🏛️', label: '12,000+ institutions', desc: 'Powered by Plaid'        },
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: `1px solid ${S.b3}` }}>
                 <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{item.icon}</span>
@@ -248,10 +227,10 @@ export default function AccountsPage() {
           <div style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: 22 }}>
             <div style={{ fontSize: '0.7rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>Security</div>
             {[
-              { icon: '🔒', text: '256-bit bank-level encryption'                  },
-              { icon: '👁️', text: 'Read-only access — we never move money'         },
-              { icon: '🏛️', text: 'Powered by Plaid, trusted by millions'          },
-              { icon: '🔄', text: 'Data syncs automatically every 24 hours'        },
+              { icon: '🔒', text: '256-bit bank-level encryption'              },
+              { icon: '👁️', text: 'Read-only access — we never move money'     },
+              { icon: '🏛️', text: 'Powered by Plaid, trusted by millions'      },
+              { icon: '🔄', text: 'Data syncs automatically every 24 hours'    },
             ].map(item => (
               <div key={item.text} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
                 <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{item.icon}</span>

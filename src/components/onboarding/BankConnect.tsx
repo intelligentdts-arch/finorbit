@@ -14,13 +14,11 @@ const S = {
   grad:  'linear-gradient(135deg,#38bdf8,#2dd4bf)',
   deep:  '#081528',
   panel: '#112240',
-  b1:    'rgba(56,189,248,0.15)',
   b2:    'rgba(56,189,248,0.10)',
   brand: '#22d3ee',
   muted: '#94a8c8',
   dim:   '#526480',
   green: '#34d399',
-  red:   '#f87171',
 }
 
 export default function BankConnect({ onSuccess, onSkip }: BankConnectProps) {
@@ -33,56 +31,44 @@ export default function BankConnect({ onSuccess, onSkip }: BankConnectProps) {
 
   const getLinkToken = async () => {
     setConnecting(true)
-    setStatus('Preparing secure connection…')
+    setStatus('Preparing secure connection...')
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
-
       const res  = await fetch('/api/plaid/create-link-token', {
-        method:  'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` },
       })
       const data = await res.json() as { link_token?: string; error?: string }
       if (data.error) throw new Error(data.error)
       setLinkToken(data.link_token ?? null)
       setStatus('Ready to connect')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error'
-      setStatus(`Error: ${msg}`)
+      setStatus(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setConnecting(false)
     }
   }
 
   const onPlaidSuccess = useCallback(
     async (publicToken: string, metadata: PlaidLinkOnSuccessMetadata) => {
-      setStatus('Connecting your accounts…')
+      setStatus('Connecting your accounts...')
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) throw new Error('Not authenticated')
-
         const institutionName = metadata.institution?.name ?? 'Your Bank'
-        const institutionId   = metadata.institution?.institution_id ?? ''
-
         const res = await fetch('/api/plaid/exchange-token', {
-          method:  'POST',
+          method: 'POST',
           headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-          body:    JSON.stringify({
-            public_token:     publicToken,
-            institution_name: institutionName,
-            institution_id:   institutionId,
-          }),
+          body: JSON.stringify({ public_token: publicToken, institution_name: institutionName, institution_id: metadata.institution?.institution_id ?? '' }),
         })
         const data = await res.json() as { error?: string }
         if (data.error) throw new Error(data.error)
-
-        setStatus('Fetching your financial data…')
+        setStatus('Fetching your financial data...')
         await fetchFinancialData()
         setConnected(true)
         setStatus(`${institutionName} connected successfully!`)
         setTimeout(onSuccess, 1500)
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Unknown error'
-        setStatus(`Connection failed: ${msg}`)
+        setStatus(`Connection failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
         setConnecting(false)
       }
     },
@@ -90,9 +76,8 @@ export default function BankConnect({ onSuccess, onSkip }: BankConnectProps) {
   )
 
   const { open, ready } = usePlaidLink({
-    token:     linkToken,
-    onSuccess: onPlaidSuccess,
-    onExit:    () => { setConnecting(false); setStatus('') },
+    token: linkToken, onSuccess: onPlaidSuccess,
+    onExit: () => { setConnecting(false); setStatus('') },
   })
 
   if (linkToken && ready && connecting && !connected) open()
@@ -117,31 +102,24 @@ export default function BankConnect({ onSuccess, onSkip }: BankConnectProps) {
             ))}
           </div>
 
-          <button
-            onClick={getLinkToken}
-            style={{ width: '100%', padding: '15px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', marginBottom: 12, boxShadow: '0 8px 28px rgba(34,211,238,0.25)' }}
-          >
+          <button onClick={getLinkToken}
+            style={{ width: '100%', padding: '15px', borderRadius: 8, fontSize: '0.88rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: S.grad, color: '#020d1a', fontFamily: 'inherit', marginBottom: 12, boxShadow: '0 8px 28px rgba(34,211,238,0.25)' }}>
             Connect My Bank Securely →
           </button>
 
-          <button
-            onClick={onSkip}
-            style={{ width: '100%', padding: '12px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${S.b2}`, background: 'transparent', color: S.muted, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
+          <button onClick={onSkip}
+            style={{ width: '100%', padding: '12px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: `1px solid ${S.b2}`, background: 'transparent', color: S.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
             Skip for now — I&apos;ll connect later
           </button>
         </>
       ) : (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
-          {connected ? (
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>✅</div>
-          ) : (
-            <div style={{ width: 48, height: 48, border: '3px solid rgba(34,211,238,0.2)', borderTopColor: S.brand, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }}/>
-          )}
+          {connected
+            ? <div style={{ fontSize: '3rem', marginBottom: 16 }}>✅</div>
+            : <div style={{ width: 48, height: 48, border: '3px solid rgba(34,211,238,0.2)', borderTopColor: S.brand, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }}/>
+          }
           <p style={{ fontSize: '0.88rem', fontFamily: 'DM Mono,monospace', color: S.muted }}>{status}</p>
-          {connected && (
-            <p style={{ fontSize: '0.84rem', color: S.green, marginTop: 8 }}>Redirecting…</p>
-          )}
+          {connected && <p style={{ fontSize: '0.84rem', color: S.green, marginTop: 8 }}>Redirecting...</p>}
         </div>
       )}
 

@@ -39,7 +39,7 @@ export default function Home() {
   const [authTab,    setAuthTab]    = useState<'signin'|'signup'>('signup')
   const [scrolled,   setScrolled]   = useState(false)
   const [activeTab,  setActiveTab]  = useState<'personal'|'business'|'gov'>('personal')
-  const { user, loading, refreshUser } = useAuthStore()
+  const { user, loading, refreshUser, signOut } = useAuthStore()
   const router = useRouter()
 
   // ── FIXED: check session once on mount, no auto-redirect ──
@@ -79,6 +79,39 @@ export default function Home() {
   )
 
   if (user && !user.onboarding_complete) return <OnboardingFlow onComplete={refreshUser} />
+
+  // Signed-in users see a clean go-to-dashboard screen
+  if (user) {
+    const timedOut = typeof window !== 'undefined' && window.location.search.includes('reason=timeout')
+    return (
+      <div style={{ minHeight:'100vh', background:S.black, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', padding:'40px 24px' }}>
+        {timedOut && (
+          <div style={{ position:'fixed', top:20, left:'50%', transform:'translateX(-50%)', padding:'10px 20px', borderRadius:8, background:'rgba(251,191,36,0.12)', border:'1px solid rgba(251,191,36,0.3)', fontSize:'0.82rem', color:'#fbbf24', fontFamily:'DM Mono,monospace', zIndex:100 }}>
+            Session expired due to inactivity
+          </div>
+        )}
+        <div style={{ fontSize:'1.4rem', fontWeight:800, marginBottom:32, ...S.gradText }}>FinOrbit</div>
+        <div style={{ width:64, height:64, borderRadius:'50%', background:S.grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.6rem', fontWeight:800, color:'#020d1a', marginBottom:24 }}>
+          {user.first_name?.charAt(0).toUpperCase()}
+        </div>
+        <h1 style={{ fontSize:'1.6rem', fontWeight:800, marginBottom:8, letterSpacing:'-0.02em' }}>
+          Welcome back, {user.first_name}
+        </h1>
+        <p style={{ fontSize:'0.9rem', color:S.muted, marginBottom:32 }}>
+          Your Autopilot is active and managing your finances.
+        </p>
+        <button onClick={() => router.push('/dashboard')}
+          style={{ padding:'14px 36px', borderRadius:8, fontSize:'0.9rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.06em', background:S.grad, color:'#020d1a', border:'none', cursor:'pointer', fontFamily:'inherit', boxShadow:'0 8px 28px rgba(34,211,238,.25)', marginBottom:16 }}>
+          Go to Dashboard
+        </button>
+        <button onClick={async () => { await signOut(); window.location.href = '/' }}
+          style={{ fontSize:'0.78rem', color:S.dim, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>
+          Sign out
+        </button>
+      </div>
+    )
+  }
+
 
   const btnPrimary: React.CSSProperties = {
     background: S.grad, color: '#020d1a', padding: '15px 36px',
