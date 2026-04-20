@@ -78,7 +78,7 @@ describe("Landing page - signed out", () => {
     fireEvent.click(screen.getByTestId("modal-close"))
     expect(screen.queryByTestId("auth-modal")).not.toBeInTheDocument()
   })
-  it("does not show My Dashboard when signed out", () => { render(React.createElement(Home)); expect(screen.queryByRole("button", { name: /my dashboard/i })).not.toBeInTheDocument() })
+  it("does not show My Dashboard when signed out", () => { render(React.createElement(Home)); expect(screen.queryByRole("button", { name: /go to dashboard/i })).not.toBeInTheDocument() })
   it("does not redirect when signed out", () => { render(React.createElement(Home)); expect(mockPush).not.toHaveBeenCalled() })
   it("pricing Start Free Trial opens signup modal", () => {
     render(React.createElement(Home))
@@ -113,19 +113,19 @@ describe("Landing page - signed out", () => {
 describe("Landing page - signed in", () => {
   const user = { id:"u1", email:"t@t.com", first_name:"Alex", last_name:"M", plan:"pro", onboarding_complete:true, risk_profile:"balanced", primary_goal:"grow_investments" }
   beforeEach(() => { jest.clearAllMocks(); setupAuth({ user }) })
-  it("shows My Dashboard button", () => { render(React.createElement(Home)); expect(screen.getAllByRole("button", { name: /my dashboard/i }).length).toBeGreaterThan(0) })
+  it("shows My Dashboard button", () => { render(React.createElement(Home)); expect(screen.getAllByRole("button", { name: /go to dashboard/i }).length).toBeGreaterThan(0) })
   it("does not show Get Started button", () => { render(React.createElement(Home)); expect(screen.queryByRole("button", { name: /^get started$/i })).not.toBeInTheDocument() })
   it("shows Sign Out button", () => { render(React.createElement(Home)); expect(screen.getAllByRole("button", { name: /sign out/i }).length).toBeGreaterThan(0) })
   it("does NOT auto-redirect on load", () => { render(React.createElement(Home)); expect(mockPush).not.toHaveBeenCalledWith("/dashboard") })
   it("clicking My Dashboard navigates to /dashboard", () => {
     render(React.createElement(Home))
-    fireEvent.click(screen.getAllByRole("button", { name: /my dashboard/i })[0])
+    fireEvent.click(screen.getAllByRole("button", { name: /go to dashboard/i })[0])
     expect(mockPush).toHaveBeenCalledWith("/dashboard")
   })
-  it("shows Go to My Dashboard button", () => { render(React.createElement(Home)); expect(screen.getAllByRole("button", { name: /go to my dashboard/i }).length).toBeGreaterThan(0) })
+  it("shows Go to My Dashboard button", () => { render(React.createElement(Home)); expect(screen.getAllByRole("button", { name: /go to dashboard/i }).length).toBeGreaterThan(0) })
   it("clicking Go to My Dashboard navigates", () => {
     render(React.createElement(Home))
-    fireEvent.click(screen.getAllByRole("button", { name: /go to my dashboard/i })[0])
+    fireEvent.click(screen.getAllByRole("button", { name: /go to dashboard/i })[0])
     expect(mockPush).toHaveBeenCalledWith("/dashboard")
   })
   it("does not show Sign In button when signed in", () => { render(React.createElement(Home)); expect(screen.queryByRole("button", { name: /^sign in$/i })).not.toBeInTheDocument() })
