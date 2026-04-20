@@ -16,12 +16,13 @@ const S = {
   text: '#eef2fc', muted: '#94a8c8', dim: '#526480', green: '#34d399',
   grad: 'linear-gradient(135deg,#e0f2fe 0%,#38bdf8 55%,#2dd4bf 100%)',
   b2: 'rgba(56,189,248,0.10)', b3: 'rgba(56,189,248,0.06)',
-  gradText: {
-    background: 'linear-gradient(135deg,#e0f2fe 0%,#38bdf8 55%,#2dd4bf 100%)',
-    WebkitBackgroundClip: 'text' as const,
-    WebkitTextFillColor: 'transparent' as const,
-    backgroundClip: 'text' as const,
-  },
+}
+
+const LOGO_STYLE = {
+  background: 'linear-gradient(135deg,#e0f2fe 0%,#38bdf8 55%,#2dd4bf 100%)',
+  WebkitBackgroundClip: 'text' as const,
+  WebkitTextFillColor: 'transparent' as const,
+  backgroundClip: 'text' as const,
 }
 
 const NAV = [
@@ -35,33 +36,30 @@ const NAV = [
 ]
 
 const SETTINGS = [
-  { icon: 'AP', label: 'Autopilot Rules', path: '/dashboard/autopilot'      },
-  { icon: 'NT', label: 'Notifications',   path: '/dashboard/notifications'  },
-  { icon: 'ST', label: 'Settings',        path: '/dashboard/settings'       },
+  { icon: 'AP', label: 'Autopilot Rules', path: '/dashboard/autopilot'     },
+  { icon: 'NT', label: 'Notifications',   path: '/dashboard/notifications' },
+  { icon: 'ST', label: 'Settings',        path: '/dashboard/settings'      },
 ]
 
-const TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
+const TIMEOUT_MS = 30 * 60 * 1000
 
 export default function DashboardShell({ title, children }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const router    = useRouter()
-  const pathname  = usePathname()
+  const router   = useRouter()
+  const pathname = usePathname()
   const { user, signOut, refreshUser, loading } = useAuthStore()
-  const timerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Auth init
   useEffect(() => {
     refreshUser()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => refreshUser())
     return () => subscription.unsubscribe()
   }, [])
 
-  // Redirect if not authed
   useEffect(() => {
     if (!loading && !user) router.push('/')
   }, [user, loading])
 
-  // Inactivity timeout — 30 min
   const resetTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(async () => {
@@ -80,7 +78,6 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
     }
   }, [])
 
-  // Sign out on tab close
   useEffect(() => {
     const onUnload = () => supabase.auth.signOut()
     window.addEventListener('beforeunload', onUnload)
@@ -131,28 +128,16 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
     <div style={{ minHeight: '100vh', background: S.black, display: 'flex' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
 
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', zIndex: 49 }}/>
       )}
 
-      {/* Sidebar */}
-      <aside style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, zIndex: 50,
-        background: S.deep, borderRight: `1px solid ${S.b3}`,
-        display: 'flex', flexDirection: 'column',
-      }}>
+      <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, zIndex: 50, background: S.deep, borderRight: `1px solid ${S.b3}`, display: 'flex', flexDirection: 'column' }}>
 
-        {/* Logo — navigates to marketing page */}
-        <button
-          onClick={() => router.push('/')}
-          style={{
-            padding: '22px 22px 18px', fontSize: '1.2rem', fontWeight: 800,
-            background: 'none', border: 'none', borderBottom: `1px solid ${S.b3}`,
-            cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
-            ...S.gradText,
-          }}>
+        {/* Logo */}
+        <button onClick={() => router.push('/')}
+          style={{ padding: '22px 22px 18px', fontSize: '1.2rem', fontWeight: 800, border: 'none', borderBottom: `1px solid ${S.b3}`, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', ...LOGO_STYLE }}>
           FinOrbit
         </button>
 
@@ -162,19 +147,12 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
           Autopilot Active
         </div>
 
-        {/* Main nav */}
-        <div style={{ padding: '12px 12px 4px', fontSize: '0.58rem', fontFamily: 'DM Mono,monospace', color: S.dim, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-          Main
-        </div>
+        <div style={{ padding: '12px 12px 4px', fontSize: '0.58rem', fontFamily: 'DM Mono,monospace', color: S.dim, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Main</div>
         {NAV.map(navBtn)}
 
-        {/* Settings nav */}
-        <div style={{ padding: '12px 12px 4px', fontSize: '0.58rem', fontFamily: 'DM Mono,monospace', color: S.dim, textTransform: 'uppercase', letterSpacing: '0.15em', marginTop: 8 }}>
-          Settings
-        </div>
+        <div style={{ padding: '12px 12px 4px', fontSize: '0.58rem', fontFamily: 'DM Mono,monospace', color: S.dim, textTransform: 'uppercase', letterSpacing: '0.15em', marginTop: 8 }}>Settings</div>
         {SETTINGS.map(navBtn)}
 
-        {/* User footer */}
         <div style={{ marginTop: 'auto', padding: '14px 12px', borderTop: `1px solid ${S.b3}` }}>
           <button onClick={handleSignOut}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, borderRadius: 8, width: '100%', cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}>
@@ -182,9 +160,7 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
               {user?.first_name?.charAt(0).toUpperCase() ?? 'U'}
             </div>
             <div style={{ minWidth: 0, textAlign: 'left' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: S.text }}>
-                {user?.first_name} {user?.last_name}
-              </div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: S.text }}>{user?.first_name} {user?.last_name}</div>
               <div style={{ fontSize: '0.65rem', fontFamily: 'DM Mono,monospace', color: '#2dd4bf' }}>
                 {user?.plan === 'pro' ? 'Autopilot Pro' : 'Launch'} · Sign out
               </div>
@@ -193,10 +169,7 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
         </div>
       </aside>
 
-      {/* Main */}
       <div style={{ flex: 1, marginLeft: 240, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-
-        {/* Topbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 32px', borderBottom: `1px solid ${S.b3}`, background: 'rgba(4,12,26,.9)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => setSidebarOpen(true)}
@@ -217,7 +190,6 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
           </div>
         </div>
 
-        {/* Content */}
         <div style={{ padding: '28px 32px', flex: 1 }}>
           {children}
         </div>
