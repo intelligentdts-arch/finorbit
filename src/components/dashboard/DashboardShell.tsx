@@ -78,12 +78,6 @@ export default function DashboardShell({ title, children }: DashboardShellProps)
     }
   }, [])
 
-  useEffect(() => {
-    const onUnload = () => supabase.auth.signOut()
-    window.addEventListener('beforeunload', onUnload)
-    return () => window.removeEventListener('beforeunload', onUnload)
-  }, [])
-
   const handleSignOut = async () => {
     if (timerRef.current) clearTimeout(timerRef.current)
     await signOut()
