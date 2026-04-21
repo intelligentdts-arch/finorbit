@@ -30,6 +30,15 @@ const typeLabel: Record<string, string> = {
   depository: 'Bank Account', credit: 'Credit Card', investment: 'Investment', loan: 'Loan', other: 'Other',
 }
 
+const getToken = async (): Promise<string | null> => {
+  // Try getSession first
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.access_token) return session.access_token
+  // Fall back to refreshSession
+  const { data: refreshed } = await supabase.auth.refreshSession()
+  return refreshed.session?.access_token ?? null
+}
+
 export default function AccountsPage() {
   const [linkToken,  setLinkToken]  = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
@@ -38,7 +47,6 @@ export default function AccountsPage() {
 
   useEffect(() => { fetchFinancialData() }, [])
 
-  // Load Plaid script
   useEffect(() => {
     if (!document.querySelector('script[src*="plaid"]')) {
       const script = document.createElement('script')
@@ -48,7 +56,6 @@ export default function AccountsPage() {
     }
   }, [])
 
-  // Open Plaid when token ready
   useEffect(() => {
     if (!linkToken) return
     const interval = setInterval(() => {
@@ -59,11 +66,11 @@ export default function AccountsPage() {
           onSuccess: async (publicToken: string) => {
             setStatus('Connecting your account...')
             try {
-              const { data: { session } } = await supabase.auth.getSession()
-              if (!session) return
+              const token = await getToken()
+              if (!token) throw new Error('Not authenticated')
               await fetch('/api/plaid/exchange-token', {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ public_token: publicToken, institution_name: 'New Account', institution_id: '' }),
               })
               setStatus('Account connected!')
@@ -86,9 +93,12 @@ export default function AccountsPage() {
     setConnecting(true)
     setStatus('Preparing secure connection...')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
-      const res  = await fetch('/api/plaid/create-link-token', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` } })
+      const token = await getToken()
+      if (!token) throw new Error('Not authenticated - please sign out and sign back in')
+      const res  = await fetch('/api/plaid/create-link-token', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
       const json = await res.json() as { link_token?: string; error?: string }
       if (json.error) throw new Error(json.error)
       setLinkToken(json.link_token ?? null)
@@ -111,8 +121,6 @@ export default function AccountsPage() {
 
   return (
     <DashboardShell title="Accounts">
-
-      {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {[
           { label: 'Total Accounts', value: accounts.length.toString(), color: S.cyan,    accent: S.cyan,    grad: false },
@@ -129,11 +137,8 @@ export default function AccountsPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20 }}>
-
-        {/* Left */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Add account banner */}
           <div style={{ background: S.panel, border: `1px solid ${S.b1}`, borderRadius: 14, padding: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 4 }}>Connect a new account</div>
@@ -146,12 +151,11 @@ export default function AccountsPage() {
           </div>
 
           {status && (
-            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'rgba(34,211,238,.08)', border: '1px solid rgba(34,211,238,.2)', fontSize: '0.82rem', fontFamily: 'DM Mono,monospace', color: S.brand }}>
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: status.startsWith('Error') ? 'rgba(248,113,113,.08)' : 'rgba(34,211,238,.08)', border: `1px solid ${status.startsWith('Error') ? 'rgba(248,113,113,.2)' : 'rgba(34,211,238,.2)'}`, fontSize: '0.82rem', fontFamily: 'DM Mono,monospace', color: status.startsWith('Error') ? S.red : S.brand }}>
               {status}
             </div>
           )}
 
-          {/* Account groups */}
           {accounts.length === 0 ? (
             <div style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 14 }}>🏦</div>
@@ -202,9 +206,7 @@ export default function AccountsPage() {
           )}
         </div>
 
-        {/* Right */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
           <div style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: 22 }}>
             <div style={{ fontSize: '0.7rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>Supported Account Types</div>
             {[
@@ -227,10 +229,10 @@ export default function AccountsPage() {
           <div style={{ background: S.panel, border: `1px solid ${S.b2}`, borderRadius: 14, padding: 22 }}>
             <div style={{ fontSize: '0.7rem', fontFamily: 'DM Mono,monospace', color: S.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>Security</div>
             {[
-              { icon: '🔒', text: '256-bit bank-level encryption'              },
-              { icon: '👁️', text: 'Read-only access — we never move money'     },
-              { icon: '🏛️', text: 'Powered by Plaid, trusted by millions'      },
-              { icon: '🔄', text: 'Data syncs automatically every 24 hours'    },
+              { icon: '🔒', text: '256-bit bank-level encryption'           },
+              { icon: '👁️', text: 'Read-only access — we never move money'  },
+              { icon: '🏛️', text: 'Powered by Plaid, trusted by millions'   },
+              { icon: '🔄', text: 'Data syncs automatically every 24 hours' },
             ].map(item => (
               <div key={item.text} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
                 <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{item.icon}</span>
