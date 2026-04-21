@@ -51,8 +51,12 @@ export default function OpportunitiesPage() {
     setChatHistory(newHistory)
 
     try {
-      const { data:{ session } } = await supabase.auth.getSession()
-      if (!session) throw new Error("Not authenticated")
+      let { data:{ session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        const { data: refreshed } = await supabase.auth.refreshSession()
+        session = refreshed.session
+      }
+      if (!session?.access_token) throw new Error("Not authenticated")
       const res = await fetch("/api/ai/chat", {
         method:"POST",
         headers:{ Authorization:`Bearer ${session.access_token}`, "Content-Type":"application/json" },
